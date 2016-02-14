@@ -1,0 +1,269 @@
+          ADDM Report for Task 'TASK_739'                                       
+          -------------------------------                                       
+                                                                                
+Analysis Period                                                                 
+---------------                                                                 
+AWR snapshot range from 680 to 681.                                             
+Time period starts at 18-SEP-09 02.02.47 AM                                     
+Time period ends at 18-SEP-09 02.24.58 AM                                       
+                                                                                
+Analysis Target                                                                 
+---------------                                                                 
+Database 'LINUXS' with DB ID 570420430.                                         
+Database version 11.2.0.1.0.                                                    
+ADDM performed an analysis of instance linuxs, numbered 1 and hosted at         
+stadf26.                                                                        
+                                                                                
+Activity During the Analysis Period                                             
+-----------------------------------                                             
+Total database time was 15344 seconds.                                          
+The average number of active sessions was 11.53.                                
+                                                                                
+Summary of Findings                                                             
+-------------------                                                             
+   Description                       Active Sessions      Recommendations       
+                                     Percent of Activity                        
+   --------------------------------  -------------------  ---------------       
+1  Commits and Rollbacks             7.95 | 68.97         3                     
+2  Top SQL Statements                1.8 | 15.59          1                     
+3  Buffer Busy - Hot Objects         .75 | 6.49           1                     
+4  Buffer Busy - Hot Block           .73 | 6.37           2                     
+5  Unusual "Concurrency" Wait Event  .57 | 4.97           3                     
+6  Session Connect and Disconnect    .5 | 4.31            1                     
+                                                                                
+                                                                                
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+                                                                                
+                                                                                
+          Findings and Recommendations                                          
+          ----------------------------                                          
+                                                                                
+Finding 1: Commits and Rollbacks                                                
+Impact is 7.96 active sessions, 68.97% of total activity.                       
+---------------------------------------------------------                       
+Waits on event "log file sync" while performing COMMIT and ROLLBACK operations  
+were consuming significant database time.                                       
+                                                                                
+   Recommendation 1: Application Analysis                                       
+   Estimated benefit is 7.95 active sessions, 68.97% of total activity.         
+   --------------------------------------------------------------------         
+   Action                                                                       
+      Investigate application logic for possible reduction in the number of     
+      COMMIT operations by increasing the size of transactions.                 
+   Rationale                                                                    
+      The application was performing 34286 transactions per minute with an      
+      average redo size of 509 bytes per transaction.                           
+                                                                                
+   Recommendation 2: Host Configuration                                         
+   Estimated benefit is 7.95 active sessions, 68.97% of total activity.         
+   --------------------------------------------------------------------         
+   Action                                                                       
+      Investigate the possibility of improving the performance of I/O to the    
+      online redo log files.                                                    
+   Rationale                                                                    
+      The average size of writes to the online redo log files was 2 K and the   
+      average time per write was 2 milliseconds.                                
+   Rationale                                                                    
+      The total I/O throughput on redo log files was 0 K per second for reads   
+      and 313 K per second for writes.                                          
+   Rationale                                                                    
+      The redo log I/O throughput was divided as follows: 0% by RMAN and        
+      recovery, 100% by Log Writer, 0% by Archiver, 0% by Streams AQ and 0% by  
+      all other activity.                                                       
+                                                                                
+   Recommendation 3: Host Configuration                                         
+   Estimated benefit is 5.71 active sessions, 49.54% of total activity.         
+   --------------------------------------------------------------------         
+   Action                                                                       
+      Consider adding more CPUs to the host or adding instances serving the     
+      database on other hosts.                                                  
+   Rationale                                                                    
+      The average number of transactions waiting for a single log file write    
+      was 4 which exceeds the number of host CPUs 2. Therefore, some            
+      transactions waited for a free CPU before completing the COMMIT           
+      operation.                                                                
+                                                                                
+   Symptoms That Led to the Finding:                                            
+   ---------------------------------                                            
+      Wait class "Commit" was consuming significant database time.              
+      Impact is 7.95 active sessions, 68.97% of total activity.                 
+                                                                                
+                                                                                
+Finding 2: Top SQL Statements                                                   
+Impact is 1.8 active sessions, 15.59% of total activity.                        
+--------------------------------------------------------                        
+SQL statements consuming significant database time were found. These            
+statements offer a good opportunity for performance improvement.                
+                                                                                
+   Recommendation 1: SQL Tuning                                                 
+   Estimated benefit is 1.8 active sessions, 15.59% of total activity.          
+   -------------------------------------------------------------------          
+   Action                                                                       
+      Investigate the UPDATE statement with SQL_ID "b6vvz2u69xdma" for          
+      possible performance improvements. You can supplement the information     
+      given here with an ASH report for this SQL_ID.                            
+      Related Object                                                            
+         SQL statement with SQL_ID b6vvz2u69xdma.                               
+         update myemp set sal = :sal                         where empno = :id  
+   Rationale                                                                    
+      The SQL spent only 16% of its database time on CPU, I/O and Cluster       
+      waits. Therefore, the SQL Tuning Advisor is not applicable in this case.  
+      Look at performance data for the SQL to find potential improvements.      
+   Rationale                                                                    
+      Database time for this SQL was divided as follows: 98% for SQL            
+      execution, 2% for parsing, 0% for PL/SQL execution and 0% for Java        
+      execution.                                                                
+   Rationale                                                                    
+      SQL statement with SQL_ID "b6vvz2u69xdma" was executed 800000 times and   
+      had an average elapsed time of 0.003 seconds.                             
+   Rationale                                                                    
+      Waiting for event "buffer busy waits" in wait class "Concurrency"         
+      accounted for 40% of the database time spent in processing the SQL        
+      statement with SQL_ID "b6vvz2u69xdma".                                    
+   Rationale                                                                    
+      Waiting for event "latch: In memory undo latch" in wait class             
+      "Concurrency" accounted for 26% of the database time spent in processing  
+      the SQL statement with SQL_ID "b6vvz2u69xdma".                            
+                                                                                
+                                                                                
+Finding 3: Buffer Busy - Hot Objects                                            
+Impact is .75 active sessions, 6.49% of total activity.                         
+-------------------------------------------------------                         
+Read and write contention on database blocks was consuming significant          
+database time.                                                                  
+                                                                                
+   Recommendation 1: Schema Changes                                             
+   Estimated benefit is .73 active sessions, 6.37% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Consider rebuilding the TABLE "OCIHOL.MYEMP" with object ID 64829 using   
+      a higher value for PCTFREE.                                               
+      Related Object                                                            
+         Database object with ID 64829.                                         
+   Rationale                                                                    
+      The UPDATE statement with SQL_ID "b6vvz2u69xdma" was significantly        
+      affected by "buffer busy" waits.                                          
+      Related Object                                                            
+         SQL statement with SQL_ID b6vvz2u69xdma.                               
+         update myemp set sal = :sal                         where empno = :id  
+                                                                                
+   Symptoms That Led to the Finding:                                            
+   ---------------------------------                                            
+      Read and write contention on database blocks was consuming significant    
+      database time.                                                            
+      Impact is .75 active sessions, 6.49% of total activity.                   
+         Wait class "Concurrency" was consuming significant database time.      
+         Impact is 1.44 active sessions, 12.47% of total activity.              
+                                                                                
+                                                                                
+Finding 4: Buffer Busy - Hot Block                                              
+Impact is .73 active sessions, 6.37% of total activity.                         
+-------------------------------------------------------                         
+A hot data block with concurrent read and write activity was found. The block   
+belongs to segment "OCIHOL.MYEMP" and is block 63974 in file 1.                 
+                                                                                
+   Recommendation 1: Application Analysis                                       
+   Estimated benefit is .73 active sessions, 6.37% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Investigate application logic to find the cause of high concurrent read   
+      and write activity to the data present in this block.                     
+      Related Object                                                            
+         Database block with object number 64829, file number 1 and block       
+         number 63974.                                                          
+   Rationale                                                                    
+      The SQL statement with SQL_ID "b6vvz2u69xdma" spent significant time on   
+      "buffer busy" waits for the hot block.                                    
+      Related Object                                                            
+         SQL statement with SQL_ID b6vvz2u69xdma.                               
+         update myemp set sal = :sal                         where empno = :id  
+                                                                                
+   Recommendation 2: Schema Changes                                             
+   Estimated benefit is .73 active sessions, 6.37% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Consider rebuilding the TABLE "OCIHOL.MYEMP" with object ID 64829 using   
+      a higher value for PCTFREE.                                               
+      Related Object                                                            
+         Database object with ID 64829.                                         
+                                                                                
+   Symptoms That Led to the Finding:                                            
+   ---------------------------------                                            
+      Read and write contention on database blocks was consuming significant    
+      database time.                                                            
+      Impact is .75 active sessions, 6.49% of total activity.                   
+         Wait class "Concurrency" was consuming significant database time.      
+         Impact is 1.44 active sessions, 12.47% of total activity.              
+                                                                                
+                                                                                
+Finding 5: Unusual "Concurrency" Wait Event                                     
+Impact is .57 active sessions, 4.97% of total activity.                         
+-------------------------------------------------------                         
+Wait event "latch: In memory undo latch" in wait class "Concurrency" was        
+consuming significant database time.                                            
+                                                                                
+   Recommendation 1: Application Analysis                                       
+   Estimated benefit is .57 active sessions, 4.97% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Investigate the cause for high "latch: In memory undo latch" waits.       
+      Refer to Oracle's "Database Reference" for the description of this wait   
+      event.                                                                    
+   Action                                                                       
+      Look at the "Top SQL Statements" finding for SQL statements consuming     
+      significant time on the "latch: In memory undo latch" wait event. For     
+      example, the UPDATE statement with SQL_ID "b6vvz2u69xdma" is responsible  
+      for 83% of these waits.                                                   
+                                                                                
+   Recommendation 2: Application Analysis                                       
+   Estimated benefit is .57 active sessions, 4.97% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Investigate the cause for high "latch: In memory undo latch" waits in     
+      Module "stage1@stadf26 (TNS V1-V3)".                                      
+                                                                                
+   Recommendation 3: Application Analysis                                       
+   Estimated benefit is .57 active sessions, 4.97% of total activity.           
+   ------------------------------------------------------------------           
+   Action                                                                       
+      Investigate the cause for high "latch: In memory undo latch" waits in     
+      Service "SYS$USERS".                                                      
+                                                                                
+   Symptoms That Led to the Finding:                                            
+   ---------------------------------                                            
+      Wait class "Concurrency" was consuming significant database time.         
+      Impact is 1.44 active sessions, 12.47% of total activity.                 
+                                                                                
+                                                                                
+Finding 6: Session Connect and Disconnect                                       
+Impact is .5 active sessions, 4.31% of total activity.                          
+------------------------------------------------------                          
+Session connect and disconnect calls were consuming significant database time.  
+                                                                                
+   Recommendation 1: Application Analysis                                       
+   Estimated benefit is .5 active sessions, 4.31% of total activity.            
+   -----------------------------------------------------------------            
+   Action                                                                       
+      Investigate application logic for possible reduction of connect and       
+      disconnect calls. For example, you might use a connection pool scheme in  
+      the middle tier.                                                          
+                                                                                
+                                                                                
+                                                                                
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+                                                                                
+          Additional Information                                                
+          ----------------------                                                
+                                                                                
+Miscellaneous Information                                                       
+-------------------------                                                       
+Wait class "Application" was not consuming significant database time.           
+Wait class "Configuration" was not consuming significant database time.         
+CPU was not a bottleneck for the instance.                                      
+Wait class "Network" was not consuming significant database time.               
+Wait class "User I/O" was not consuming significant database time.              
+Hard parsing of SQL statements was not consuming significant database time.     
+                                                                                
+                                                                                
