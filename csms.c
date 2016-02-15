@@ -40,7 +40,6 @@ int main (int argc, char *argv[]) {
 				printf("Command not found: %s \n", command);
 			}
 		}
-		sleep(1);
 	}
 	return 0;
 }
