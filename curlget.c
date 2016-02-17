@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <curl/curl.h>
+#include "curl/curl.h"
 
 struct string {
   char *ptr;
@@ -18,8 +18,7 @@ void init_string(struct string *s) {
   s->ptr[0] = '\0';
 }
 
-size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
-{
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s) {
   size_t new_len = s->len + size*nmemb;
   s->ptr = realloc(s->ptr, new_len+1);
   if (s->ptr == NULL) {
@@ -33,26 +32,36 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
   return size*nmemb;
 }
 
-int main(void)
-{
+char* curlget(char *url) {
   CURL *curl;
   CURLcode res;
+  char *result;
 
   curl = curl_easy_init();
   if(curl) {
     struct string s;
     init_string(&s);
 
-    curl_easy_setopt(curl, CURLOPT_URL, "180.178.135.203:24555/api");
+    curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
     res = curl_easy_perform(curl);
 
-    printf("%s\n", s.ptr);
+    size_t len = strlen(s.ptr);
+    result = malloc(len+1);
+    free(result);
+    memcpy(result, s.ptr, len);
     free(s.ptr);
-
-    /* always cleanup */
+    
+      /* always cleanup */
     curl_easy_cleanup(curl);
   }
+  return result;
+}
+
+
+int main(void) {
+  printf("%s\n", curlget("180.178.135.203:24555/api"));
+  //curlget();
   return 0;
 }
