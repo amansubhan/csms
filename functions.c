@@ -26,7 +26,11 @@ char main (int argc, char *argv[]) {
 	} else if (strcmp(argv[1], "suspended") == 0) {
 		printf("%s \n", suspended());
 	}*/
-	logger(1,"Test","+9233226655");
+	logger(1,"success","+9233226655");
+	logger(2,"errors","+9233226655");
+	logger(3,"failed","+9233226655");
+	logger(9,"server","+9233226655");
+	logger(6,"Test","+9233226655");
 	return 0;
 }
 
@@ -67,20 +71,29 @@ char* suspended() {
 }
 
 void logger(int level, char *msg, char *num) {
-	if (level= 1) {
-		fh = fopen("/tmp/log", "a");
+	if (level == 1) {		// On success
+		fh = fopen("/tmp/smslog", "a");
 		fputs(concat(concat(concat(concat(concat(dt()," : "),num)," : "),msg),"\n"), fh);
 		fclose;
-	} else if (level = 2 ) {
-		NULL;
-	} else if (level = 3 ) {
-		NULL;
-	} else if (level = 9 ) {
-		NULL;
-	} else {
-		NULL;
+	} else if (level == 2 ) {	// On failure
+		fh = fopen("/tmp/errorlog", "a");
+		fputs(concat(concat(concat(concat(concat(dt()," : "),num)," : "),msg),"\n"), fh);
+		fclose;
+	} else if (level == 3 ) {	// Failed log
+		fh = fopen("/tmp/failedlog", "a");
+		fputs(concat(concat(concat(concat(concat(dt()," : "),num)," : "),msg),"\n"), fh);
+		fclose;
+	} else if (level == 9 ) {	// Server log
+		fh = fopen("/tmp/serverlog", "a");
+		fputs(concat(concat(concat(concat(concat(dt()," : "),num)," : "),msg),"\n"), fh);
+		fclose;
+	} else {	// Unknown errors
+		fh = fopen("/tmp/errorlog", "a");
+		fputs(concat(concat(concat(concat(concat(dt()," : "),num)," : "),msg),"\n"), fh);
+		fclose;
 	}
 }
+
 char* prtstr(char *str) {
 	size_t len = strlen(str);
 	char *result = malloc(len+1);
